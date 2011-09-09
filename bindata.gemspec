@@ -1,8 +1,7 @@
-$:.unshift 'lib'
-require 'rubygems'
+$:.push File.expand_path("../lib", __FILE__)
 require 'bindata'
 
-spec = Gem::Specification.new do |s|
+Gem::Specification.new do |s|
   s.name = 'bindata'
   s.version = BinData::VERSION
   s.platform = Gem::Platform::RUBY
@@ -18,11 +17,8 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc = true
   s.rdoc_options = %w[README lib/bindata -m README]
 
-  s.files = Dir.glob("[A-Z]*") + Dir.glob("{examples,spec,lib}/**/*")
-end
 
-if $0==__FILE__
-  Gem::manage_gems
-  Gem::Builder.new(spec).build
+  s.files         = `git ls-files`.split("\n")
+  s.test_files    = `git ls-files -- {examples,spec,lib/tasks}/*`.split("\n")
+  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
 end
-
