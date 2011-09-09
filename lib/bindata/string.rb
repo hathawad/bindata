@@ -49,7 +49,7 @@ module BinData
 
     optional_parameters :read_length, :length, :trim_padding
     default_parameters  :pad_char => "\0"
-    default_parameters  :pad_right => true
+    default_parameters  :pad_left => false
     mutually_exclusive_parameters :read_length, :length
     mutually_exclusive_parameters :length, :value
 
@@ -104,10 +104,10 @@ module BinData
         elsif str.length > len
           str.slice(0, len)
         else
-          if eval_parameter(:pad_right)
-            str + (eval_parameter(:pad_char) * (len - str.length))
-          else
+          if eval_parameter(:pad_left)
             (eval_parameter(:pad_char) * (len - str.length)) + str
+          else
+            str + (eval_parameter(:pad_char) * (len - str.length))
           end
 
         end
