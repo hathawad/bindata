@@ -49,6 +49,7 @@ module BinData
 
     optional_parameters :read_length, :length, :trim_padding
     default_parameters  :pad_char => "\0"
+    default_parameters  :pad_size => :right
     mutually_exclusive_parameters :read_length, :length
     mutually_exclusive_parameters :length, :value
 
@@ -66,13 +67,13 @@ module BinData
       #-------------
       private
 
-      def sanitized_pad_char(ch)
-        result = ch.is_a?(Integer) ? ch.chr : ch.to_s
-        if result.length > 1
-          raise ArgumentError, ":pad_char must not contain more than 1 char"
+        def sanitized_pad_char(ch)
+          result = ch.is_a?(Integer) ? ch.chr : ch.to_s
+          if result.length > 1
+            raise ArgumentError, ":pad_char must not contain more than 1 char"
+          end
+          result
         end
-        result
-      end
     end
 
     def assign(val)
@@ -94,34 +95,39 @@ module BinData
     #---------------
     private
 
-    def clamp_to_length(str)
-      str.force_encoding(Encoding::BINARY) if RUBY_VERSION >= "1.9"
+      def clamp_to_length(str)
+        str.force_encoding(Encoding::BINARY) if RUBY_VERSION >= "1.9"
 
-      len = eval_parameter(:length) || str.length
-      if str.length == len
-        str
-      elsif str.length > len
-        str.slice(0, len)
-      else
-        str + (eval_parameter(:pad_char) * (len - str.length))
+        len = eval_parameter(:length) || str.length
+        if str.length == len
+          str
+        elsif str.length > len
+          str.slice(0, len)
+        else
+          if eval_parameter(:pad_side) == :left
+            (eval_parameter(:pad_char) * (len - str.length)) + str
+          else
+            str + (eval_parameter(:pad_char) * (len - str.length))
+          end
+
+        end
       end
-    end
 
-    def trim_padding(str)
-      str.sub(/#{eval_parameter(:pad_char)}*$/, "")
-    end
+      def trim_padding(str)
+        str.sub(/#{eval_parameter(:pad_char)}*$/, "")
+      end
 
-    def value_to_binary_string(val)
-      clamp_to_length(val)
-    end
+      def value_to_binary_string(val)
+        clamp_to_length(val)
+      end
 
-    def read_and_return_value(io)
-      len = eval_parameter(:read_length) || eval_parameter(:length) || 0
-      io.readbytes(len)
-    end
+      def read_and_return_value(io)
+        len = eval_parameter(:read_length) || eval_parameter(:length) || 0
+        io.readbytes(len)
+      end
 
-    def sensible_default
-      ""
-    end
+      def sensible_default
+        ""
+      end
   end
 end
